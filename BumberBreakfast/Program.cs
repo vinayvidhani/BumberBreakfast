@@ -6,10 +6,25 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+
 builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IBreakfastRepository, BreakfastRepository>();
-builder.Services.AddDbContext<BreakfastDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Host.ConfigureAppConfiguration((hostingContext, config) =>
+{
+    var settings = config.Build();
+    config.AddAzureAppConfiguration(options =>
+    {
+        options.Connect(builder.Configuration.GetConnectionString("AppConfig"));
+    });
+});
+
+
+var connectionstring = builder.Configuration.GetSection("common:setting").GetValue<string>("connectionstring");
+
+
+builder.Services.AddDbContext<BreakfastDbContext>(options => options.UseSqlServer(connectionstring));
 
 var app = builder.Build();
 
